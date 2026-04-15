@@ -14,7 +14,7 @@ const rl = readline.createInterface({
 });
 
 let chatSession = model.startChat({
-    history: [],
+    generationConfig: {maxOutputTokens: 1000, },history:[],
 });
 
 async function askJimbo() {
