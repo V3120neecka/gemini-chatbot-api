@@ -49,7 +49,6 @@ async function askJimbo() {
     askJimbo();
   });
 }
-
 console.log("--- Chatbot Jimbo Aktif (Mode Memory) ---");
 console.log("Ketik 'exit' untuk berhenti.");
-askJimbo();
+askJimbo(); // Pastikan namanya askJimbo, bukan bo()
