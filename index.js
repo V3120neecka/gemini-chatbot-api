@@ -1,31 +1,55 @@
-require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const readline = require("readline");
+require('dotenv').config();
 
-// Log ini untuk memastikan API Key terbaca (Hanya untuk tes)
-console.log("Mengecek API Key...");
-if (!process.env.GEMINI_API_KEY) {
-    console.error("Error: API Key tidak ditemukan di file .env!");
-    process.exit(1);
-}
-
+// Inisialisasi Google AI dengan API Key dari .env
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function runChat() {
-    try {
-        // Kita pakai gemini-1.5-flash lagi karena ini yang paling baru
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const prompt = "Halo, jika kamu membaca ini artinya chatbot saya berhasil!";
+// Gunakan model 'gemini-1.5-flash' yang terbaru
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        console.log("Sedang memanggil AI...");
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        
-        console.log("--- BERHASIL! ---");
-        console.log("Respon AI:", response.text());
-        console.log("-----------------");
-    } catch (error) {
-        console.error("Error Detail:", error.message);
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Memori untuk menyimpan riwayat percakapan agar nyambung
+let chatSession = model.startChat({
+  history: [],
+  generationConfig: {
+    maxOutputTokens: 1000,
+  },
+});
+
+async function askJimbo() {
+  rl.question("\n[User]: ", async (userInput) => {
+    if (userInput.toLowerCase() === "exit") {
+      console.log("[Jimbo]: Dadah! Sampai jumpa lagi.");
+      rl.close();
+      process.exit();
     }
+
+    try {
+      console.log("Jimbo sedang berpikir...");
+      
+      // Mengirim pesan ke sesi chat yang sedang berjalan (memory aktif)
+      const result = await chatSession.sendMessage(userInput);
+      const response = await result.response;
+      const text = response.text();
+
+      console.log("\n[Jimbo]:", text);
+
+    } catch (error) {
+      console.error("\n[Error]: Waduh, sepertinya ada masalah koneksi.");
+      console.error("Detail:", error.message);
+      console.log("Tips: Pastikan API Key di .env sudah benar.");
+    }
+
+    // Tanya lagi (looping)
+    askJimbo();
+  });
 }
 
-runChat();
+console.log("--- Chatbot Jimbo Aktif (Mode Memory) ---");
+console.log("Ketik 'exit' untuk berhenti.");
+askJimbo();
